@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Featured Products Info with Live Inventory</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { 
+    font-family: 'Inter', sans-serif; 
+    background: #a8d4d9; 
+    color: #a6c5f1;
+    margin: 0; padding: 0;
+  }
+  .page-wrapper {
+    display: flex;
+    min-height: 100vh;
+  }
+  .main-container {
+    flex: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  .sidebar-products {
+    width: 350px;
+    padding: 2rem 1rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .main-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #0e4f58;
+    margin-bottom: 1rem;
+    text-align: left;
+  }
+  .intro-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #000;
+    margin-bottom: 3rem;
+    max-width: 800px;
+  }
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0e4f58;
+    margin: 2rem 0 1.5rem 0;
+  }
+  .content-container {
+    background: #0e4f58;
+    border-radius: 1rem;
+    border: 1px solid #404040;
+    padding: 2rem;
+  }
+  .content-item {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #404040;
+  }
+  .content-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  .big-description {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .content-details {
+    font-size: 1rem;
+    color: #b3b3b3;
+    line-height: 1.6;
+  }
+  .product-box {
+    background: #3ba6b5;
+    border: 4px solid #0e4f58;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    cursor: pointer;
+  }
+  .product-number {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+  .product-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0e4f58;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+  .product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #000;
+    margin-bottom: 1.5rem;
+  }
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .details-button {
+    background: #0e4f58;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .details-button:hover {
+    background-color: #0d946a;
+  }
+  .modal {
+    display:none;
+    position:fixed;
+    z-index:1000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    overflow:auto;
+    background:rgba(0,0,0,.8);
+    justify-content:center;
+    align-items:center;
+  }
+  .modal-content {
+    background:#2d2d2d;
+    color: #e5e5e5;
+    padding:2.5rem;
+    border-radius:1rem;
+    max-width:500px;
+    box-shadow:0 10px 25px rgba(0,0,0,.5);
+    animation:fadeIn .3s ease-out;
+  }
+  @keyframes fadeIn {
+    from {opacity:0;transform:scale(.95);}
+    to {opacity:1;transform:scale(1);}
+  }
+  .back-button {
+    background: #404040;
+    color: #e5e5e5;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .details-container {
+    background: #0e4f58;
+    border-radius: 1rem;
+    padding: 2rem;
+    border: 1px solid #000;
+  }
+  .details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width:1024px){
+    .page-wrapper {
+      flex-direction: column;
+    }
+    .sidebar-products {
+      width: 100%;
+      height: auto;
+      position: static;
+    }
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .product-details {
+    background:#3ba6b5;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .product-details ul {
+    color: black !important;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+    gap: 1rem;
+  }
+  .option-card {
+    background: #4fd1c5;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #505050;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out,box-shadow 0.2s ease-in-out;
+  }
+  .option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+  }
+  .buy-button {
+    background: #0e4f58;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 1rem;
+    transition: background-color 0.2s ease-in-out;
+  }
+  .buy-button:hover {
+    background-color: #0d946a;
+  }
+  .buy-button:disabled {
+    background-color: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .stock-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <div class="main-container">
+    <div id="home-page" class="transition-opacity duration-300">
+      <h1 class="main-title">Top 20 Featured Products You Must Check Now</h1>
+      <p class="intro-text">
+        Discover our curated selection of premium products across various categories. Each product has been carefully reviewed and selected for quality, innovation, and value. These trending products are making waves in their respective markets and deserve your attention.
+      </p>
+      <h2 class="section-title">Top 20 Products to Follow</h2>
+      <div id="content-container" class="content-container"></div>
+    </div>
+    
+    <div id="details-page" class="hidden opacity-0 transition-opacity duration-300">
+      <button id="back-button" class="back-button" aria-label="Back to Products">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+        </svg>
+        Back to Products
+      </button>
+      <div id="product-details-container"></div>
+    </div>
+  </div>
+  <div class="sidebar-products">
+    <div id="products-container"></div>
+  </div>
+</div>
+<div id="buy-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-content text-center">
+    <h2 id="modal-title" class="text-2xl font-bold text-white mb-4">Purchase Confirmed!</h2>
+    <p id="modal-text" class="text-gray-300 mb-6">Thank you for your order!</p>
+    <button id="close-modal-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg">Close</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, doc, serverTimestamp, runTransaction, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCbnRkTFTs1kK9cD-2RR0kkpshtNiw1uK0",
+    authDomain: "roassss.firebaseapp.com",
+    projectId: "roassss",
+    storageBucket: "roassss.firebasestorage.app",
+    messagingSenderId: "342715789282",
+    appId: "1:342715789282:web:1101b3611f4048cd9213bb",
+    measurementId: "G-Z74YY1TDKG"
+  };
+
+  let db;
+  const costPerClick = 0.50;
+
+  const data = [
+    {"SKU ID": "SKU-001","Product Name": "Wireless Headphones","Category": "Electronics","Brand": "ActiveLife","Size": "One Size","Color": "Green","Material": "Plastic","Weight (lbs)": 0.71,"Dimensions": "20L x 17W x 2H","Supplier": "Fashion Forward","Selling Price": 200.08,"Stock Status": "high"},
+    {"SKU ID": "SKU-002","Product Name": "Smart Watch","Category": "Electronics","Brand": "EcoFriendly","Size": "Small","Color": "Brown","Material": "Silicone","Weight (lbs)": 3.3,"Dimensions": "14L x 12W x 7H","Supplier": "Local Crafters","Selling Price": 167.03,"Stock Status": "high"},
+    {"SKU ID": "SKU-003","Product Name": "Laptop Stand","Category": "Electronics","Brand": "ActiveLife","Size": "Standard","Color": "Green","Material": "Metal","Weight (lbs)": 5.01,"Dimensions": "11L x 10W x 5H","Supplier": "Tech Distributors","Selling Price": 240.71,"Stock Status": "high"},
+    {"SKU ID": "SKU-004","Product Name": "Phone Case","Category": "Electronics","Brand": "StyleMax","Size": "iPhone 15","Color": "Pink","Material": "Silicone","Weight (lbs)": 3.15,"Dimensions": "16L x 3W x 11H","Supplier": "Local Crafters","Selling Price": 241.09,"Stock Status": "high"},
+    {"SKU ID": "SKU-005","Product Name": "Bluetooth Speaker","Category": "Electronics","Brand": "TechPro","Size": "Compact","Color": "Green","Material": "Metal","Weight (lbs)": 1.34,"Dimensions": "11L x 14W x 10H","Supplier": "Fashion Forward","Selling Price": 165.32,"Stock Status": "high"},
+    {"SKU ID": "SKU-006","Product Name": "Running Shoes","Category": "Sports","Brand": "HomeComfort","Size": "10","Color": "Green","Material": "Leather","Weight (lbs)": 4.82,"Dimensions": "13L x 4W x 5H","Supplier": "Fashion Forward","Selling Price": 238.78,"Stock Status": "medium"},
+    {"SKU ID": "SKU-007","Product Name": "Yoga Mat","Category": "Sports","Brand": "HomeComfort","Size": "Standard","Color": "White","Material": "Rubber","Weight (lbs)": 3.25,"Dimensions": "13L x 12W x 3H","Supplier": "Global Supply Co","Selling Price": 111.64,"Stock Status": "high"},
+    {"SKU ID": "SKU-008","Product Name": "Water Bottle","Category": "Sports","Brand": "StyleMax","Size": "16oz","Color": "Brown","Material": "Plastic","Weight (lbs)": 3.66,"Dimensions": "20L x 13W x 2H","Supplier": "Local Crafters","Selling Price": 161.65,"Stock Status": "high"},
+    {"SKU ID": "SKU-009","Product Name": "Backpack","Category": "Sports","Brand": "HomeComfort","Size": "Medium","Color": "Green","Material": "Canvas","Weight (lbs)": 2.07,"Dimensions": "10L x 9W x 5H","Supplier": "Local Crafters","Selling Price": 232.21,"Stock Status": "low"},
+    {"SKU ID": "SKU-010","Product Name": "Sunglasses","Category": "Sports","Brand": "EcoFriendly","Size": "One Size","Color": "Gray","Material": "Plastic","Weight (lbs)": 4.52,"Dimensions": "23L x 14W x 9H","Supplier": "Local Crafters","Selling Price": 91.49,"Stock Status": "medium"},
+    {"SKU ID": "SKU-011","Product Name": "Face Cream","Category": "Beauty","Brand": "HomeComfort","Size": "4oz","Color": "Blue","Material": "Plastic","Weight (lbs)": 2.52,"Dimensions": "8L x 6W x 9H","Supplier": "Global Supply Co","Selling Price": 50.64,"Stock Status": "high"},
+    {"SKU ID": "SKU-012","Product Name": "Shampoo","Category": "Beauty","Brand": "TechPro","Size": "8oz","Color": "Pink","Material": "Plastic","Weight (lbs)": 0.86,"Dimensions": "15L x 3W x 8H","Supplier": "Fashion Forward","Selling Price": 71.56,"Stock Status": "high"},
+    {"SKU ID": "SKU-013","Product Name": "Perfume","Category": "Beauty","Brand": "GlowUp","Size": "1oz","Color": "Brown","Material": "Glass","Weight (lbs)": 2.22,"Dimensions": "8L x 3W x 4H","Supplier": "Fashion Forward","Selling Price": 169.4,"Stock Status": "medium"},
+    {"SKU ID": "SKU-014","Product Name": "Lipstick","Category": "Beauty","Brand": "ActiveLife","Size": "Standard","Color": "Blue","Material": "Plastic","Weight (lbs)": 4.62,"Dimensions": "21L x 9W x 10H","Supplier": "Fashion Forward","Selling Price": 191.51,"Stock Status": "high"},
+    {"SKU ID": "SKU-015","Product Name": "Moisturizer","Category": "Beauty","Brand": "GlowUp","Size": "4oz","Color": "Blue","Material": "Plastic","Weight (lbs)": 3.37,"Dimensions": "23L x 16W x 4H","Supplier": "Premium Imports","Selling Price": 178.31,"Stock Status": "high"},
+    {"SKU ID": "SKU-016","Product Name": "Coffee Maker","Category": "Home & Garden","Brand": "PremiumChoice","Size": "6-cup","Color": "Green","Material": "Plastic","Weight (lbs)": 2.23,"Dimensions": "5L x 10W x 9H","Supplier": "Local Crafters","Selling Price": 154.62,"Stock Status": "high"},
+    {"SKU ID": "SKU-017","Product Name": "Desk Lamp","Category": "Home & Garden","Brand": "ActiveLife","Size": "Standard","Color": "Yellow","Material": "Plastic","Weight (lbs)": 3.06,"Dimensions": "13L x 10W x 5H","Supplier": "Local Crafters","Selling Price": 135.14,"Stock Status": "medium"},
+    {"SKU ID": "SKU-018","Product Name": "Plant Pot","Category": "Home & Garden","Brand": "HomeComfort","Size": "Medium","Color": "Black","Material": "Ceramic","Weight (lbs)": 1.49,"Dimensions": "21L x 6W x 2H","Supplier": "Premium Imports","Selling Price": 172.74,"Stock Status": "high"},
+    {"SKU ID": "SKU-019","Product Name": "Throw Pillow","Category": "Home & Garden","Brand": "TechPro","Size": "18x18","Color": "Pink","Material": "Polyester","Weight (lbs)": 3.31,"Dimensions": "23L x 12W x 2H","Supplier": "Fashion Forward","Selling Price": 72.57,"Stock Status": "high"},
+    {"SKU ID": "SKU-020","Product Name": "Wall Art","Category": "Home & Garden","Brand": "GlowUp","Size": "16x20","Color": "Blue","Material": "Canvas","Weight (lbs)": 0.67,"Dimensions": "19L x 15W x 7H","Supplier": "Fashion Forward","Selling Price": 81.85,"Stock Status": "high"}
+  ];
+
+  const bigDescriptions = [
+    "Revolutionary Audio Technology Meets Premium Design Standards",
+    "Next-Generation Wearable Technology for Modern Lifestyle",
+    "Ergonomic Excellence in Workspace Innovation Solutions",
+    "Ultimate Mobile Protection with Contemporary Style Elements",
+    "Immersive Sound Experience in Portable Audio Excellence",
+    "Performance Footwear Engineered for Athletic Excellence",
+    "Wellness and Fitness Foundation for Mind-Body Balance",
+    "Sustainable Hydration Solutions for Active Living",
+    "Adventure-Ready Storage Solutions for Modern Explorers",
+    "Fashion-Forward Eye Protection with UV Technology",
+    "Luxurious Skincare Innovation for Radiant Beauty",
+    "Professional Hair Care Solutions for Stunning Results",
+    "Sophisticated Fragrance Artistry for Personal Expression",
+    "Premium Cosmetics for Creative Self-Expression",
+    "Advanced Hydration Technology for Healthy Skin",
+    "Precision Coffee Brewing Excellence for Connoisseurs",
+    "Contemporary Lighting Design for Perfect Ambiance",
+    "Botanical Living Solutions for Indoor Gardens",
+    "Comfort and Style Fusion for Home Decoration",
+    "Artistic Wall Solutions for Interior Transformation"
+  ];
+
+  const additionalInfo = [
+    "Experience crystal-clear audio with advanced noise cancellation technology. Perfect for music lovers, professionals, and anyone seeking premium sound quality in a wireless format.",
+    "Stay connected, track your health, and manage your day with cutting-edge smartwatch technology. Features include fitness tracking, notifications, and long-lasting battery life.",
+    "Transform your workspace with this adjustable, ergonomic stand designed for laptops and tablets. Improve your posture and productivity with premium materials and sleek design.",
+    "Protect your investment with this premium phone case featuring military-grade protection, wireless charging compatibility, and a slim profile that doesn't compromise on style.",
+    "Enjoy rich, powerful sound anywhere you go. This portable speaker delivers exceptional audio quality with deep bass and crystal-clear highs for all your favorite music.",
+    "Step up your running game with these high-performance athletic shoes. Featuring advanced cushioning, breathable materials, and durable construction for serious athletes.",
+    "Create your personal wellness space with this premium yoga mat. Non-slip surface, eco-friendly materials, and optimal thickness provide the perfect foundation for practice.",
+    "Stay hydrated in style with this innovative water bottle. Features include temperature retention, leak-proof design, and sustainable materials for conscious consumers.",
+    "Adventure awaits with this versatile backpack designed for durability and functionality. Multiple compartments, weather-resistant materials, and ergonomic design for all-day comfort.",
+    "Protect your eyes while making a fashion statement. These sunglasses offer UV protection, polarized lenses, and timeless design that complements any outfit or occasion.",
+    "Unlock your skin's potential with this luxurious skincare innovation. Formulated with premium ingredients for those who prioritize self-care and beauty.",
+    "Transform your hair care routine with this professional-grade cleansing solution. Designed for those who understand that great hair starts with great products.",
+    "Captivate your senses with this exquisite fragrance masterpiece. A sophisticated blend that speaks to your unique personality and refined taste.",
+    "Express your individuality with this premium cosmetic essential. Perfect for those who view makeup as an art form and self-expression tool.",
+    "Nourish and rejuvenate your skin with this advanced hydration formula. Created for those who invest in long-term skin health and natural radiance.",
+    "Elevate your morning ritual with this precision brewing system. For coffee connoisseurs who appreciate the perfect balance of technology and tradition.",
+    "Contemporary Lighting Design for Perfect Ambiance",
+    "Botanical Living Solutions for Indoor Gardens",
+    "Add comfort and style to any room with this premium textile accessory. Designed for those who understand that home decor is about creating feelings.",
+    "Transform your walls into a canvas of inspiration with this carefully curated artistic piece. For those who appreciate the power of visual storytelling."
+  ];
+
+  let liveInventoryMap = new Map();
+
+  async function initFirebase() {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    db = getFirestore(app);
+    try {
+      await signInAnonymously(auth);
+      console.log('Firebase initialized and user signed in anonymously');
+    } catch (error) {
+      console.error("Firebase Auth failed:", error);
+    }
+  }
+
+  async function fetchLiveInventory() {
+    const skuClicksRef = collection(db, "sku_clicks");
+    const snapshot = await getDocs(skuClicksRef);
+    liveInventoryMap.clear();
+    snapshot.forEach(docSnap => {
+      const fbData = docSnap.data();
+      const skuId = fbData.sku_id;
+      if (!skuId) return;
+      liveInventoryMap.set(skuId, {
+        inventory_qty: fbData.inventory_qty ?? 0,
+        stock_status: (fbData.inventory_qty ?? 0) <= 0 ? 'out of stock' :
+                      (fbData.inventory_qty ?? 0) <= 5 ? 'low' :
+                      (fbData.inventory_qty ?? 0) <= 10 ? 'medium' : 'high'
+      });
+    });
+  }
+
+  function getInventoryForSku(skuId) {
+    if (liveInventoryMap.has(skuId)) {
+      return liveInventoryMap.get(skuId);
+    }
+    return { inventory_qty: 0, stock_status: 'out of stock' };
+  }
+
+  function getProductImageUrl(productName) {
+    const base = "https://placehold.co/";
+    const text = productName.replace(/\s/g, "+");
+    return `${base}400x300/4fd1c5/1a1a1a?text=${text}`;
+  }
+
+  function renderContent() {
+    const container = document.getElementById('content-container');
+    container.innerHTML = '';
+    const byName = data.reduce((acc, p) => {
+      if (!acc[p['Product Name']]) acc[p['Product Name']] = [];
+      acc[p['Product Name']].push(p);
+      return acc;
+    }, {});
+    for (const productName in byName) {
+      const index = Object.keys(byName).indexOf(productName);
+      const bigDescription = bigDescriptions[index] || "Premium Quality Product for Modern Living";
+      const additionalDescription = additionalInfo[index] || "Discover this amazing product that combines quality, style, and innovation for the modern consumer.";
+      const item = document.createElement('div');
+      item.className = 'content-item';
+      item.innerHTML = `
+        <div class="big-description">${bigDescription}</div>
+        <div class="content-details">${additionalDescription}</div>
+      `;
+      container.appendChild(item);
+    }
+  }
+
+  function renderProductBoxes() {
+    const productsContainer = document.getElementById('products-container');
+    productsContainer.innerHTML = '';
+    const byName = data.reduce((acc, p) => {
+      if (!acc[p['Product Name']]) acc[p['Product Name']] = [];
+      acc[p['Product Name']].push(p);
+      return acc;
+    }, {});
+    const productNames = Object.keys(byName);
+    const shuffledNames = [...productNames].sort(() => Math.random() - 0.5);
+
+    shuffledNames.forEach((productName, index) => {
+      const group = byName[productName];
+      const hasInventory = group.some(p => getInventoryForSku(p['SKU ID']).inventory_qty > 0);
+      if (!hasInventory) return;
+
+      const first = group[0];
+      const lowestPrice = Math.min(...group.map(p => parseFloat(p['Selling Price'])));
+      const productBox = document.createElement('div');
+      productBox.className = 'product-box';
+      productBox.setAttribute('data-name', productName);
+      productBox.innerHTML = `
+        <div class="product-number">${(index + 1).toString().padStart(2, '0')}</div>
+        <div class="product-name">${productName}</div>
+        <div class="product-meta">
+          <div class="meta-item">Category: ${first.Category}</div>
+          <div class="meta-item">Brand: ${first.Brand}</div>
+          <div class="meta-item">From $${lowestPrice.toFixed(2)}</div>
+        </div>
+        <button class="details-button">View Details</button>
+      `;
+      productsContainer.appendChild(productBox);
+    });
+  }
+
+  function renderDetailsPage(productName) {
+    const products = data.filter(p => p['Product Name'] === productName);
+    const container = document.getElementById('product-details-container');
+    if (!products.length) return;
+
+    const first = products[0];
+    let html = `
+      <div class="details-container">
+        <div class="details-grid">
+          <img src="${getProductImageUrl(productName)}" style="width: 100%; height: 300px; object-fit: cover; border-radius: 0.75rem;" />
+          <div>
+            <p>Category: ${first.Category}</p>
+            <h1>${productName}</h1>
+            <p>by ${first.Brand}</p>
+            <div class="product-details">
+              <ul>
+                <li>Material: ${first.Material}</li>
+                <li>Weight: ${first['Weight (lbs)']} lbs</li>
+                <li>Dimensions: ${first.Dimensions}</li>
+                <li>Supplier: ${first.Supplier}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <h2>Choose your option:</h2>
+        <div class="options-grid">`;
+
+    products.forEach(p => {
+      const inv = getInventoryForSku(p['SKU ID']);
+      const isOutOfStock = inv.inventory_qty <= 0;
+      let stockColorClass = 'bg-gray-500';
+      if (inv.inventory_qty > 10) stockColorClass = 'bg-green-500';
+      else if (inv.inventory_qty > 0) stockColorClass = 'bg-yellow-500';
+
+      html += `
+        <div class="option-card">
+          <p>${p.Size ? 'Size: ' + p.Size : ''} ${p.Color ? 'Color: ' + p.Color : ''}</p>
+          <p>$${parseFloat(p['Selling Price']).toFixed(2)}</p>
+          <div>
+            <span class="stock-badge ${stockColorClass}">${isOutOfStock ? 'Out of Stock' : 'Stock: ' + inv.inventory_qty}</span>
+          </div>
+          <button class="buy-button buy-now-button" data-sku="${p['SKU ID']}" ${isOutOfStock ? 'disabled' : ''}>
+            ${isOutOfStock ? 'Out of Stock' : 'Buy Now'}
+          </button>
+        </div>`;
+    });
+
+    html += "</div></div>";
+    container.innerHTML = html;
+
+    products.forEach(p => trackViewClick(p['SKU ID']));
+
+    switchPage('details');
+  }
+
+  async function trackSkuClick(skuId, price) {
+    if (!db || !skuId) return;
+    const ref = doc(db, `sku_clicks/${skuId}`);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const docSnap = await transaction.get(ref);
+        if (!docSnap.exists()) throw 'No document!';
+        let currentQty = docSnap.data().inventory_qty ?? 0;
+        if (currentQty <= 0) throw 'Out of stock';
+
+        const updatedQty = currentQty - 1;
+
+        const currentClicks = docSnap.data().click_count ?? 0;
+        const currentRevenue = docSnap.data().total_revenue ?? 0;
+        const updatedRevenue = currentRevenue + price;
+        const currentAdSpent = docSnap.data().ad_spent ?? 0;
+        const newRoas = currentAdSpent > 0 ? updatedRevenue / currentAdSpent : 0;
+
+        transaction.update(ref, {
+          inventory_qty: updatedQty,
+          click_count: currentClicks + 1,
+          total_revenue: updatedRevenue,
+          roas: newRoas,
+          last_clicked: serverTimestamp(),
+        });
+
+        liveInventoryMap.set(skuId, {
+          inventory_qty: updatedQty,
+          stock_status: updatedQty <= 0 ? 'out of stock' :
+                        updatedQty <= 5 ? 'low' :
+                        updatedQty <= 10 ? 'medium' : 'high'
+        });
+      });
+      console.log(`Purchase processed for SKU ${skuId}`);
+    } catch (error) {
+      console.error('Purchase transaction failed:', error);
+    }
+  }
+
+  async function trackViewClick(skuId) {
+    if (!db || !skuId) return;
+    const ref = doc(db, `sku_clicks/${skuId}`);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const docSnap = await transaction.get(ref);
+        if (!docSnap.exists()) {
+          transaction.set(ref, {
+            view_click_count: 1,
+            click_count: 0,
+            ad_spent: costPerClick,
+            total_revenue: 0,
+            roas: 0,
+            last_clicked: serverTimestamp(),
+            sku_id: skuId,
+            inventory_qty: 0
+          });
+        } else {
+          const fbData = docSnap.data();
+          const currentViewClicks = fbData.view_click_count ?? 0;
+          const updatedViewClicks = currentViewClicks + 1;
+          const updatedAdSpent = updatedViewClicks * costPerClick;
+          const currentRevenue = fbData.total_revenue ?? 0;
+          const newRoas = updatedAdSpent > 0 ? currentRevenue / updatedAdSpent : 0;
+          transaction.update(ref, {
+            view_click_count: updatedViewClicks,
+            ad_spent: updatedAdSpent,
+            roas: newRoas,
+            last_clicked: serverTimestamp()
+          });
+        }
+      });
+      console.log(`Tracked view click for SKU ${skuId}`);
+    } catch (error) {
+      console.error("Failed to track view click:", error);
+    }
+  }
+
+  function setupEventListeners() {
+    document.getElementById('products-container').addEventListener('click', e => {
+      const box = e.target.closest('[data-name]');
+      if (box) renderDetailsPage(box.dataset.name);
+    });
+
+    document.getElementById('details-page').addEventListener('click', e => {
+      const btn = e.target.closest('button.buy-now-button');
+      if (btn) {
+        const skuId = btn.dataset.sku;
+        const product = data.find(p => p['SKU ID'] === skuId);
+        const price = product ? parseFloat(product['Selling Price']) : 0;
+        if (liveInventoryMap.get(skuId)?.inventory_qty > 0) {
+          trackSkuClick(skuId, price);
+          showBuyModal(skuId);
+          renderProductBoxes();
+          renderDetailsPage(product['Product Name']);
+        } else {
+          alert('This product is currently out of stock.');
+        }
+      }
+    });
+
+    document.getElementById('back-button').addEventListener('click', () => switchPage('home'));
+    document.getElementById('close-modal-button').addEventListener('click', () => {
+      document.getElementById('buy-modal').style.display = 'none';
+    });
+  }
+
+  function switchPage(page) {
+    const homePage = document.getElementById('home-page');
+    const detailsPage = document.getElementById('details-page');
+    window.scrollTo(0, 0);
+    if (page === 'home') {
+      detailsPage.classList.add('opacity-0');
+      setTimeout(() => {
+        homePage.classList.remove('hidden');
+        detailsPage.classList.add('hidden');
+        homePage.classList.remove('opacity-0');
+      }, 300);
+    } else if (page === 'details') {
+      homePage.classList.add('opacity-0');
+      setTimeout(() => {
+        detailsPage.classList.remove('hidden');
+        homePage.classList.add('hidden');
+        detailsPage.classList.remove('opacity-0');
+      }, 300);
+    }
+  }
+
+  function showBuyModal(skuId) {
+    const product = data.find(p => p['SKU ID'] === skuId);
+    document.getElementById('modal-text').textContent = `You have successfully purchased ${product['Product Name']} (SKU: ${skuId}) for $${parseFloat(product['Selling Price']).toFixed(2)}. Thank you for your order!`;
+    document.getElementById('buy-modal').style.display = 'flex';
+  }
+
+  (async () => {
+    await initFirebase();
+    await fetchLiveInventory();
+    renderContent();
+    renderProductBoxes();
+    setupEventListeners();
+  })();
+</script>
+</body>
+</html>
